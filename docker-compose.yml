@@ -1,0 +1,50 @@
+version: '3.7'
+
+services:
+  mongodb:
+    image: eu.gcr.io/dev2ops/n5601-mongo:v0.0.1
+    container_name: mongodb
+    volumes:
+    - mongodb_data:/data/db
+    ports:
+    - "27017:27017"
+    networks:
+    - dev_ops_network
+    restart: always
+
+  nodeapi:
+    depends_on:
+    - mongodb
+    container_name: nodeapi
+    image: eu.gcr.io/dev2ops/n5601-nodeapi:v0.0.1
+    ports:
+    - "3315:3000"
+    networks:
+    - dev_ops_network
+    environment:
+      NODE_ENV: production
+      SECRET: secret
+      MONGODB_URI: mongodb://mongodb/conduit
+    restart: always
+
+  react:
+    depends_on:
+    - mongodb
+    - nodeapi
+    container_name: react
+    image: eu.gcr.io/dev2ops/n5601-react:v0.0.1
+    ports:
+    - "4100:4100"
+    networks:
+    - dev_ops_network
+    environment:
+       REACT_APP_API_ROOT: localhost/api
+    restart: always
+
+volumes:
+    mongodb_data:
+            name: mongodb_data
+
+networks:
+      dev_ops_network:
+              name: dev_ops_network
